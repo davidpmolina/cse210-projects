@@ -6,17 +6,22 @@ namespace JournalProgram
 {
     public class Journal
     {
-        private List<Entry> entries = new List<Entry>();
-        private PromptGenerator promptGenerator = new PromptGenerator();
+        private List<Entry> _entries = new List<Entry>();
+        private PromptGenerator _promptGenerator = new PromptGenerator();
 
         public void AddEntry(Entry entry)
         {
-            entries.Add(entry);
+            _entries.Add(entry);
         }
 
         public void DisplayEntries()
         {
-            foreach (var entry in entries)
+            if (_entries.Count == 0)
+            {
+                Console.WriteLine("Your journal is empty.");
+                return;
+            }
+            foreach (var entry in _entries)
             {
                 Console.WriteLine(entry);
             }
@@ -24,43 +29,57 @@ namespace JournalProgram
 
         public void SaveToFile(string filename)
         {
-            using (StreamWriter outputFile = new StreamWriter(filename))
+            try
             {
-                foreach (var entry in entries)
+                using (StreamWriter outputFile = new StreamWriter(filename))
                 {
-                    outputFile.WriteLine($"{entry.Date}~|~{entry.Prompt}~|~{entry.Response}");
+                    foreach (var entry in _entries)
+                    {
+                        outputFile.WriteLine($"{entry._date}~|~{entry._prompt}~|~{entry._response}");
+                    }
                 }
+                Console.WriteLine($"Journal saved to {filename}");
             }
-            Console.WriteLine($"Journal saved to {filename}");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving journal: {ex.Message}");
+            }
         }
 
         public void LoadFromFile(string filename)
         {
-            if (File.Exists(filename))
+            try
             {
-                entries.Clear();
-                string[] lines = File.ReadAllLines(filename);
-
-                foreach (string line in lines)
+                if (File.Exists(filename))
                 {
-                    string[] parts = line.Split(new string[] { "~|~" }, StringSplitOptions.None);
+                    _entries.Clear();
+                    string[] lines = File.ReadAllLines(filename);
 
-                    if (parts.Length == 3)
+                    foreach (string line in lines)
                     {
-                        entries.Add(new Entry(parts[1], parts[2], parts[0]));
+                        string[] parts = line.Split(new string[] { "~|~" }, StringSplitOptions.None);
+
+                        if (parts.Length == 3)
+                        {
+                            _entries.Add(new Entry(parts[1], parts[2], parts[0]));
+                        }
                     }
+                    Console.WriteLine($"Journal loaded from {filename}");
                 }
-                Console.WriteLine($"Journal loaded from {filename}");
+                else
+                {
+                    Console.WriteLine($"File {filename} not found.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"File {filename} not found.");
+                Console.WriteLine($"Error loading journal: {ex.Message}");
             }
         }
 
         public string GetRandomPrompt()
         {
-            return promptGenerator.GetRandomPrompt();
+            return _promptGenerator.GetRandomPrompt();
         }
     }
 }
