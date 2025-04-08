@@ -103,8 +103,20 @@ public class EternalGoal : Goal
 
 public class ChecklistGoal : Goal
 {
-    public int Target { get; private set; }
-    public int Count { get; private set; }
+    private int _target;
+    private int _count;
+
+    public int Target
+    {
+        get { return _target; }
+        private set { _target = value; }
+    }
+
+    public int Count
+    {
+        get { return _count; }
+        private set { _count = value; }
+    }
 
     public ChecklistGoal(string name, int points, int target, int count = 0) : base(name, points)
     {
@@ -143,8 +155,20 @@ public class ChecklistGoal : Goal
 
 public class ProgressGoal : Goal
 {
-    public int TotalProgress { get; private set; }
-    public int CurrentProgress { get; private set; }
+    private int _totalProgress;
+    private int _currentProgress;
+
+    public int TotalProgress
+    {
+        get { return _totalProgress; }
+        private set { _totalProgress = value; }
+    }
+
+    public int CurrentProgress
+    {
+        get { return _currentProgress; }
+        private set { _currentProgress = value; }
+    }
 
     public ProgressGoal(string name, int points, int totalProgress, int currentProgress = 0) : base(name, points)
     {
@@ -194,28 +218,28 @@ public class NegativeGoal : Goal
 
 public class EternalQuest
 {
-    private List<Goal> goals = new List<Goal>();
-    private int score = 0;
-    private int level = 1;
+    private List<Goal> _goals = new List<Goal>();
+    private int _score = 0;
+    private int _level = 1;
 
     public void CreateGoal(string goalType, string name, int points, int target = 0, int totalProgress = 0)
     {
         switch (goalType.ToLower())
         {
             case "simple":
-                goals.Add(new SimpleGoal(name, points));
+                _goals.Add(new SimpleGoal(name, points));
                 break;
             case "eternal":
-                goals.Add(new EternalGoal(name, points));
+                _goals.Add(new EternalGoal(name, points));
                 break;
             case "checklist":
-                goals.Add(new ChecklistGoal(name, points, target));
+                _goals.Add(new ChecklistGoal(name, points, target));
                 break;
             case "progress":
-                goals.Add(new ProgressGoal(name, points, totalProgress));
+                _goals.Add(new ProgressGoal(name, points, totalProgress));
                 break;
             case "negative":
-                goals.Add(new NegativeGoal(name, points));
+                _goals.Add(new NegativeGoal(name, points));
                 break;
             default:
                 throw new ArgumentException("Invalid goal type.");
@@ -224,19 +248,19 @@ public class EternalQuest
 
     public void RecordEvent(string goalName)
     {
-        Goal goal = goals.Find(g => g.Name == goalName);
+        Goal goal = _goals.Find(g => g.Name == goalName);
         if (goal == null)
         {
             throw new ArgumentException($"Goal '{goalName}' not found.");
         }
         goal.RecordEvent();
-        score += goal.GetPoints();
+        _score += goal.GetPoints();
         CheckLevelUp();
     }
 
     public void DisplayGoals()
     {
-        foreach (Goal goal in goals)
+        foreach (Goal goal in _goals)
         {
             Console.WriteLine(goal.Display());
         }
@@ -244,16 +268,16 @@ public class EternalQuest
 
     public void DisplayScore()
     {
-        Console.WriteLine($"Score: {score}, Level: {level}");
+        Console.WriteLine($"Score: {_score}, Level: {_level}");
     }
 
     public void SaveData(string filename = "eternal_quest.json")
     {
         var data = new Dictionary<string, object>
         {
-            { "Score", score },
-            { "Goals", goals.ConvertAll(g => g.ToDictionary()) },
-            { "Level", level }
+            { "Score", _score },
+            { "Goals", _goals.ConvertAll(g => g.ToDictionary()) },
+            { "Level", _level }
         };
 
         string jsonString = JsonSerializer.Serialize(data);
@@ -266,15 +290,15 @@ public class EternalQuest
         {
             string jsonString = File.ReadAllText(filename);
             var data = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString);
-            score = ((JsonElement)data["Score"]).GetInt32();
+            _score = ((JsonElement)data["Score"]).GetInt32();
 
             if (data.ContainsKey("Level"))
             {
-                level = ((JsonElement)data["Level"]).GetInt32();
+                _level = ((JsonElement)data["Level"]).GetInt32();
             }
             else
             {
-                level = 1;
+                _level = 1;
             }
 
             var goalJsonElements = ((JsonElement)data["Goals"]).EnumerateArray();
@@ -286,7 +310,7 @@ public class EternalQuest
                 goalDataList.Add(goalDictionary);
             }
 
-            goals = goalDataList.ConvertAll(goalData => Goal.FromDictionary((Dictionary<string, object>)goalData));
+            _goals = goalDataList.ConvertAll(goalData => Goal.FromDictionary((Dictionary<string, object>)goalData));
         }
         catch (FileNotFoundException)
         {
@@ -296,10 +320,10 @@ public class EternalQuest
 
     private void CheckLevelUp()
     {
-        if (score >= level * 1000)
+        if (_score >= _level * 1000)
         {
-            level++;
-            Console.WriteLine($"Level Up! You are now level {level}.");
+            _level++;
+            Console.WriteLine($"Level Up! You are now level {_level}.");
         }
     }
 }
